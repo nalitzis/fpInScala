@@ -126,5 +126,15 @@ object List { // `List` companion object. Contains functions for creating and wo
   def append[A](a: A, xs: List[A]) = reverse(Cons(a, reverse(xs)))
   def append2[A](xs: List[A], ys: List[A]) = foldRight(xs, ys)(Cons(_,_))
 
-  def map[A,B](l: List[A])(f: A => B): List[B] = ???
+  def map[A,B](l: List[A])(f: A => B): List[B] =
+    l match {
+      case Nil => Nil
+      case Cons(h,t) => Cons(f(h), map(t)(f))
+    }
+
+  def addOne(xs: List[Int]) : List[Int] = map(xs)(n => n+1)
+
+  def concat[A](l: List[List[A]]): List[A] = foldRight(l, Nil:List[A])(append)
+
+  def flatMap[A,B](xs: List[A])(f: A => List[B]) = concat(map(xs)(f))
 }
