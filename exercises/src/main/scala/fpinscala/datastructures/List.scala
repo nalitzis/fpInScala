@@ -1,11 +1,17 @@
 package fpinscala.datastructures
 
-sealed trait List[+A] // `List` data type, parameterized on a type, `A`
-case object Nil extends List[Nothing] // A `List` data constructor representing the empty list
+trait List[+A] {
+  def isEmpty : Boolean
+}// `List` data type, parameterized on a type, `A`
+case object Nil extends List[Nothing] {
+  override def isEmpty: Boolean = true
+}// A `List` data constructor representing the empty list
 /* Another data constructor, representing nonempty lists. Note that `tail` is another `List[A]`,
 which may be `Nil` or another `Cons`.
  */
-case class Cons[+A](head: A, tail: List[A]) extends List[A]
+case class Cons[+A](head: A, tail: List[A]) extends List[A] {
+  override def isEmpty: Boolean = false
+}
 
 object List { // `List` companion object. Contains functions for creating and working with lists.
   def sum(ints: List[Int]): Int = ints match { // A function that uses pattern matching to add up a list of integers
@@ -37,12 +43,6 @@ object List { // `List` companion object. Contains functions for creating and wo
       case Cons(h,t) => Cons(h, append(t, a2))
     }
 
-  def foldRight[A,B](as: List[A], z: B)(f: (A, B) => B): B = // Utility functions
-    as match {
-      case Nil => z
-      case Cons(x, xs) => f(x, foldRight(xs, z)(f))
-    }
-
   def sum2(ns: List[Int]) =
     foldRight(ns, 0)((x,y) => x + y)
 
@@ -50,19 +50,81 @@ object List { // `List` companion object. Contains functions for creating and wo
     foldRight(ns, 1.0)(_ * _) // `_ * _` is more concise notation for `(x,y) => x * y`; see sidebar
 
 
-  def tail[A](l: List[A]): List[A] = ???
+  def tail[A](l: List[A]): List[A] =
+    l match {
+      case Nil => throw new IllegalArgumentException("can't call tail on an empty list!")
+      case Cons(_, t) => t
+    }
 
-  def setHead[A](l: List[A], h: A): List[A] = ???
+  def setHead[A](l: List[A], h: A): List[A] =
+    l match {
+      case Nil => throw new IllegalArgumentException("can't set head on an empty list!")
+      case Cons(_,t) => Cons(h, t)
+    }
 
-  def drop[A](l: List[A], n: Int): List[A] = ???
+  def drop[A](l: List[A], n: Int): List[A] =
+    l match {
+      case Nil => if (n > 0) throw new IllegalArgumentException("can't drop from an empty list!") else l
+      case Cons(_, t) => if (n > 0) drop(t, n - 1) else l
+    }
 
-  def dropWhile[A](l: List[A], f: A => Boolean): List[A] = ???
+  def dropWhile[A](l: List[A], f: A => Boolean): List[A] =
+    l match {
+      case Nil => Nil
+      case Cons(h, t) => {
+        if (f(h)) dropWhile(t, f)
+        else Cons(h, dropWhile(t, f))
+      }
+    }
 
-  def init[A](l: List[A]): List[A] = ???
+  def dropWhileCurried[A](l: List[A])(f: A=> Boolean) : List[A] =
+    l match {
+      case Nil => Nil
+      case Cons(h, t) => {
+        if (f(h)) dropWhileCurried(t)(f)
+        else Cons(h, dropWhileCurried(t)(f))
+      }
+    }
 
-  def length[A](l: List[A]): Int = ???
+  def init[A](l: List[A]): List[A] =
+    l match {
+      case Nil => Nil
+      case Cons(h,t) => {
+        if (t == Nil) Nil
+        else Cons(h, init(t))
+      }
+    }
 
-  def foldLeft[A,B](l: List[A], z: B)(f: (B, A) => B): B = ???
+  def length[A](l: List[A]): Int =
+    l match {
+      case Nil => 0
+      case Cons(_, t) => foldRight(t, 1)((_, acc) => acc + 1)
+    }
+
+  def foldRight[A,B](as: List[A], z: B)(f: (A, B) => B): B = // Utility functions
+    as match {
+      case Nil => z
+      case Cons(x, xs) => f(x, foldRight(xs, z)(f))
+    }
+
+  def foldLeft[A,B](l: List[A], z: B)(f: (B, A) => B): B =
+    l match {
+      case Nil => z
+      case Cons(x, xs) => foldLeft(xs, f(z, x))(f)
+    }
+
+  def sumFoldLeft(ns: List[Int]) = foldLeft(ns, 0)(_ + _)
+  def prodFoldLeft(ns: List[Double]) = foldLeft(ns, 1.0)(_ * _)
+  def lenghtFoldLeft[A](l: List[A]): Int =
+    l match {
+      case Nil => 0
+      case Cons(_, t) => foldLeft(t, 1)((acc, _) => acc + 1)
+    }
+
+  def reverse[A](xs: List[A]) = foldLeft(xs, Nil: List[A])((accList : List[A], a: A) => Cons(a, accList))
+
+  def append[A](a: A, xs: List[A]) = reverse(Cons(a, reverse(xs)))
+  def append2[A](xs: List[A], ys: List[A]) = foldRight(xs, ys)(Cons(_,_))
 
   def map[A,B](l: List[A])(f: A => B): List[B] = ???
 }
