@@ -19,3 +19,10 @@ val h = stream.take(1).toList
 
 Stream.constant(4).take(5).toList
 Stream.from(4).take(6).toList
+
+Stream.unfold(0)(x => if(x > 10) None else Some((x,x+1))).toList
+(0 to 10).toList
+
+Stream.fromByUnfold(4).take(6).toList
+
+Stream.onesByUnfold.take(5).toList
