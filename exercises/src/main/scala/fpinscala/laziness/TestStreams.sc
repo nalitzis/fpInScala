@@ -3,6 +3,8 @@ import fpinscala.laziness.Stream
 val myStream = Stream(1,2,3,4)
 println(myStream)
 
+println(myStream.foldRight(0)((a, b) => a + b))
+
 myStream.toList
 myStream.drop(1).toList
 myStream.take(2).toList
@@ -26,3 +28,5 @@ Stream.unfold(0)(x => if(x > 10) None else Some((x,x+1))).toList
 Stream.fromByUnfold(4).take(6).toList
 
 Stream.onesByUnfold.take(5).toList
+
+myStream.takeByUnfold(2).toList
